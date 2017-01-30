@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import edu.amherst.acdc.trellis.spi.ConstraintService;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
-import org.apache.commons.rdf.api.BlankNodeOrIRI;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.Triple;
@@ -68,15 +67,19 @@ public class LdpConstraints implements ConstraintService {
         return Optional.of(model).filter(typeMap::containsKey).map(typeMap::get).orElse(basicConstraints);
     }
 
+    private static Predicate<Triple> subjectFilter(final IRI context) {
+        return triple -> {
+            final String str = triple.getSubject().ntriplesString();
+            return !str.equals("<" + context + ">") && !str.startsWith("<" + context + "#");
+        };
+    }
+
     private Function<Triple, Stream<IRI>> checkConstraints(final IRI model, final IRI context) {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> Optional.of(triple).filter(propertyFilter(model)).map(t -> of(Trellis.InvalidProperty))
-            .orElseGet(() ->
-                Optional.of(triple).map(Triple::getSubject).map(BlankNodeOrIRI::ntriplesString)
-                    .filter(subject -> !subject.equals("<" + context + ">") && !subject.startsWith("<" + context + "#"))
-                    .map(t -> of(Trellis.InvalidSubject))
-                    .orElse(empty()));
+            .orElseGet(() -> Optional.of(triple).filter(subjectFilter(context)).map(t -> of(Trellis.InvalidSubject))
+            .orElse(empty()));
     }
 
     @Override
