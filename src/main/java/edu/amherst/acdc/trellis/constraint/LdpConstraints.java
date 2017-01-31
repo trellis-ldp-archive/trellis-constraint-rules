@@ -16,18 +16,22 @@
 package edu.amherst.acdc.trellis.constraint;
 
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.stream.Stream.empty;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import edu.amherst.acdc.trellis.spi.ConstraintService;
+import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
@@ -54,6 +58,8 @@ public class LdpConstraints implements ConstraintService {
         triple.getPredicate().equals(LDP.isMemberOfRelation));
 
     private static Map<IRI, Predicate<Triple>> typeMap;
+    private static Set<IRI> propertiesWithInDomainRange;
+    private static Set<IRI> propertiesWithUriRange;
 
     static {
         final Map<IRI, Predicate<Triple>> types = new HashMap<>();
@@ -64,6 +70,20 @@ public class LdpConstraints implements ConstraintService {
         types.put(LDP.NonRDFSource, basicConstraints);
         types.put(LDP.RDFSource, basicConstraints);
         typeMap = unmodifiableMap(types);
+
+        final Set<IRI> inDomainProps = new HashSet<>();
+        inDomainProps.add(ACL.accessControl);
+        inDomainProps.add(LDP.membershipResource);
+        propertiesWithInDomainRange = unmodifiableSet(inDomainProps);
+
+        final Set<IRI> uriRangeProps = new HashSet<>();
+        uriRangeProps.add(ACL.accessControl);
+        uriRangeProps.add(LDP.membershipResource);
+        uriRangeProps.add(LDP.hasMemberRelation);
+        uriRangeProps.add(LDP.isMemberOfRelation);
+        uriRangeProps.add(LDP.inbox);
+        uriRangeProps.add(LDP.insertedContentRelation);
+        propertiesWithUriRange = unmodifiableSet(uriRangeProps);
     }
 
     // Ensure that any LDP properties are appropriate for the interaction model
@@ -83,17 +103,40 @@ public class LdpConstraints implements ConstraintService {
             .map(RDFTerm::ntriplesString).filter(str -> !str.startsWith("<" + LDP.uri)).isPresent();
     }
 
-    private Function<Triple, Stream<IRI>> checkConstraints(final IRI model, final IRI context) {
+    // Verify that the range of the property is a URI (if the property is in the above set)
+    private static Predicate<Triple> uriRangeFilter = triple ->
+        propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI);
+
+
+    // Verify that the range of the property is in the repository domain
+    private static Predicate<Triple> inDomainRangeFilter(final String domain) {
+        return triple -> propertiesWithInDomainRange.contains(triple.getPredicate()) &&
+            !triple.getObject().ntriplesString().startsWith("<" + domain);
+    }
+
+    private final String domain;
+
+    /**
+     * Create a LpdConstraints service
+     * @param domain the repository domain
+     */
+    public LdpConstraints(final String domain) {
+        this.domain = domain;
+    }
+
+    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model, final IRI context) {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> of(triple).filter(propertyFilter(model)).map(t -> Stream.of(Trellis.InvalidProperty))
             .orElseGet(() -> of(triple).filter(subjectFilter(context)).map(t -> Stream.of(Trellis.InvalidSubject))
             .orElseGet(() -> of(triple).filter(typeFilter(model)).map(t -> Stream.of(Trellis.InvalidType))
-            .orElse(empty())));
+            .orElseGet(() -> of(triple).filter(uriRangeFilter).map(t -> Stream.of(Trellis.InvalidRange))
+            .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain)).map(t -> Stream.of(Trellis.InvalidRange))
+            .orElse(empty())))));
     }
 
     @Override
     public Optional<IRI> constrainedBy(final IRI model, final Graph graph, final IRI context) {
-        return graph.stream().parallel().flatMap(checkConstraints(model, context)).findAny();
+        return graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny();
     }
 }
