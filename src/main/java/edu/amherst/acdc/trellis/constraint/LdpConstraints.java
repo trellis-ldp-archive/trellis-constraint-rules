@@ -20,6 +20,8 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 
 import java.util.HashMap;
@@ -118,8 +120,9 @@ public class LdpConstraints implements ConstraintService {
 
     // Verify that the cardinality of the `propertiesWithUriRange` properties. Keep any whose cardinality is > 1
     private static Predicate<Graph> checkCardinality = graph ->
-        graph.stream().filter(uriRangeFilter).collect(groupingBy(Triple::getPredicate))
-                .entrySet().stream().map(Map.Entry::getValue).map(List::size).anyMatch(val -> val > 1);
+        graph.stream().filter(uriRangeFilter)
+            .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())))
+            .entrySet().stream().map(Map.Entry::getValue).map(List::size).anyMatch(val -> val > 1);
 
     private final String domain;
 
