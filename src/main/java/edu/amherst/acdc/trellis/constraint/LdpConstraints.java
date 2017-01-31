@@ -19,13 +19,15 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.empty;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -114,6 +116,11 @@ public class LdpConstraints implements ConstraintService {
             !triple.getObject().ntriplesString().startsWith("<" + domain);
     }
 
+    // Verify that the cardinality of the `propertiesWithUriRange` properties. Keep any whose cardinality is > 1
+    private static Predicate<Graph> checkCardinality = graph ->
+        graph.stream().filter(uriRangeFilter).collect(groupingBy(Triple::getPredicate))
+                .entrySet().stream().map(Map.Entry::getValue).map(List::size).anyMatch(val -> val > 1);
+
     private final String domain;
 
     /**
@@ -137,6 +144,8 @@ public class LdpConstraints implements ConstraintService {
 
     @Override
     public Optional<IRI> constrainedBy(final IRI model, final Graph graph, final IRI context) {
-        return graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny();
+        return of(graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny()
+            .orElseGet(() -> of(graph).filter(checkCardinality).map(t -> Trellis.InvalidCardinality)
+            .orElse(null)));
     }
 }
