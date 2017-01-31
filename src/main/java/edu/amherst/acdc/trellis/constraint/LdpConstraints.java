@@ -77,7 +77,7 @@ public class LdpConstraints implements ConstraintService {
             .filter(str -> !str.equals("<" + context + ">") && !str.startsWith("<" + context + "#")).isPresent();
     }
 
-    // Don't allow LDP types to be set explicitly -- change this
+    // Don't allow LDP types to be set explicitly
     private static Predicate<Triple> typeFilter(final IRI model) {
         return triple -> of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
             .map(RDFTerm::ntriplesString).filter(str -> !str.startsWith("<" + LDP.uri)).isPresent();
