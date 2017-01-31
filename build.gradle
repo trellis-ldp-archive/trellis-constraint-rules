@@ -196,9 +196,9 @@ uploadArchives {
             }
 
             scm {
-                connection 'scm:git:git://github.com/acoburn/trellis-constraint-rules.git'
-                developerConnection 'scm:git:git@github.com/acoburn/trellis-constraint-rules.git'
-                url 'https://github.com/acoburn/trellis-constraint-rules'
+                connection 'scm:git:git://github.com/trellis-ldp/trellis-constraint-rules.git'
+                developerConnection 'scm:git:git@github.com/trellis-ldp/trellis-constraint-rules.git'
+                url 'https://github.com/trellis-ldp/trellis-constraint-rules'
                 tag 'HEAD'
             }
 
