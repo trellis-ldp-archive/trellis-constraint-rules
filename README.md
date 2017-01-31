@@ -6,7 +6,7 @@ A set of constraints on a trellis repository defining the rules that govern vali
 
 These rules consist of:
 
-  * Single-subject rule -- RDF graphs must have a single subject, corresponding to the resource URI
+  * Single-subject rule -- RDF graphs must have a single subject, corresponding to the resource URI (hashURIs are allowed)
   * No inappropriate LDP properties -- certain LDP properties can only be modified if the interation model permits it
   * LDP Resource types cannot be set or changed in the RDF
   * Certain properties (`acl:accessControl`, `ldp:membershipResource`) must be used with "in-domain" resources
