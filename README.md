@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/acoburn/trellis-constraint-rules.png?branch=master)](https://travis-ci.org/acoburn/trellis-constraint-rules)
 
-A set of constraints on a trellis repository. For example, the rules that govern valid RDF.
+A set of constraints on a trellis repository defining the rules that govern valid RDF.
 
 These rules consist of:
 
