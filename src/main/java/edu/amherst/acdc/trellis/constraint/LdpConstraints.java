@@ -117,9 +117,11 @@ public class LdpConstraints implements ConstraintService {
     }
 
     // Verify that the cardinality of the `propertiesWithUriRange` properties. Keep any whose cardinality is > 1
-    private static Predicate<Graph> checkCardinality = graph ->
-        graph.stream().filter(uriRangeFilter).collect(groupingBy(Triple::getPredicate))
-                .entrySet().stream().map(Map.Entry::getValue).map(List::size).anyMatch(val -> val > 1);
+    private static Predicate<Graph> checkCardinality = graph -> {
+        final Map<IRI, List<Triple>> vals = graph.stream().filter(uriRangeFilter)
+            .collect(groupingBy(Triple::getPredicate));
+        return vals.entrySet().stream().map(Map.Entry::getValue).map(List::size).anyMatch(val -> val > 1);
+    };
 
     private final String domain;
 
