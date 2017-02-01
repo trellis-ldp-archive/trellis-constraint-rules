@@ -125,7 +125,17 @@ public class LdpConstraintsTest {
             assertTrue(res.isPresent());
             assertEquals(of(Trellis.InvalidRange), res);
         });
+    }
 
+    @Test
+    public void testCardinality() {
+        models.stream().forEach(type -> {
+            final String subject = domain + "foo";
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidCardinality.ttl", subject),
+                    rdf.createIRI(subject));
+            assertTrue(res.isPresent());
+            assertEquals(of(Trellis.InvalidCardinality), res);
+        });
     }
 
     private Graph asGraph(final String resource, final String context) {
