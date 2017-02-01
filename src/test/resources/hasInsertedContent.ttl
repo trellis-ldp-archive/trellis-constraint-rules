@@ -1,0 +1,5 @@
+@prefix ldp: <http://www.w3.org/ns/ldp#>
+@prefix dc: <http://purl.org/dc/terms/>
+
+<> ldp:insertedContentRelation dc:subject .
+<#hash> dc:title "Some Title"@en .

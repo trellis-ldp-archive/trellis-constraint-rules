@@ -19,6 +19,7 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
@@ -39,7 +40,6 @@ import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
-import org.apache.commons.rdf.api.BlankNodeOrIRI;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDFTerm;
@@ -97,19 +97,21 @@ public class LdpConstraints implements ConstraintService {
 
     // Ensure that RDF graphs adhere to the single-subject rule
     private static Predicate<Triple> subjectFilter(final IRI context) {
-        return triple -> of(triple).map(Triple::getSubject).map(BlankNodeOrIRI::ntriplesString)
-            .filter(str -> !str.equals("<" + context + ">") && !str.startsWith("<" + context + "#")).isPresent();
+        return triple -> of(triple).map(Triple::getSubject)
+            .filter(iri -> !iri.equals(context) && !iri.ntriplesString().startsWith("<" + context.getIRIString() + "#"))
+            .isPresent();
     }
 
     // Don't allow LDP types to be set explicitly
     private static Predicate<Triple> typeFilter(final IRI model) {
         return triple -> of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
-            .map(RDFTerm::ntriplesString).filter(str -> !str.startsWith("<" + LDP.uri)).isPresent();
+            .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
     }
 
     // Verify that the range of the property is a URI (if the property is in the above set)
-    private static Predicate<Triple> uriRangeFilter = triple ->
-        propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI);
+    private static Predicate<Triple> uriRangeFilter = triple -> {
+        return propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI);
+    };
 
 
     // Verify that the range of the property is in the repository domain
@@ -147,7 +149,7 @@ public class LdpConstraints implements ConstraintService {
 
     @Override
     public Optional<IRI> constrainedBy(final IRI model, final Graph graph, final IRI context) {
-        return of(graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny()
+        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny()
             .orElseGet(() -> of(graph).filter(checkCardinality).map(t -> Trellis.InvalidCardinality)
             .orElse(null)));
     }
