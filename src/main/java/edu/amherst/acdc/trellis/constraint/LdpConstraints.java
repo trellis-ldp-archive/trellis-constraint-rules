@@ -61,34 +61,30 @@ public class LdpConstraints implements ConstraintService {
         triple.getPredicate().equals(LDP.hasMemberRelation) ||
         triple.getPredicate().equals(LDP.isMemberOfRelation));
 
-    private static Map<IRI, Predicate<Triple>> typeMap;
-    private static Set<IRI> propertiesWithInDomainRange;
-    private static Set<IRI> propertiesWithUriRange;
 
-    static {
-        final Map<IRI, Predicate<Triple>> types = new HashMap<>();
-        types.put(LDP.BasicContainer, basicConstraints);
-        types.put(LDP.Container, basicConstraints);
-        types.put(LDP.DirectContainer, directConstraints);
-        types.put(LDP.IndirectContainer, indirectConstraints);
-        types.put(LDP.NonRDFSource, basicConstraints);
-        types.put(LDP.RDFSource, basicConstraints);
-        typeMap = unmodifiableMap(types);
+    private static final Map<IRI, Predicate<Triple>> typeMap = unmodifiableMap(new HashMap<IRI, Predicate<Triple>>() { {
+        put(LDP.BasicContainer, basicConstraints);
+        put(LDP.Container, basicConstraints);
+        put(LDP.DirectContainer, directConstraints);
+        put(LDP.IndirectContainer, indirectConstraints);
+        put(LDP.NonRDFSource, basicConstraints);
+        put(LDP.RDFSource, basicConstraints);
+    }});
 
-        final Set<IRI> inDomainProps = new HashSet<>();
-        inDomainProps.add(ACL.accessControl);
-        inDomainProps.add(LDP.membershipResource);
-        propertiesWithInDomainRange = unmodifiableSet(inDomainProps);
 
-        final Set<IRI> uriRangeProps = new HashSet<>();
-        uriRangeProps.add(ACL.accessControl);
-        uriRangeProps.add(LDP.membershipResource);
-        uriRangeProps.add(LDP.hasMemberRelation);
-        uriRangeProps.add(LDP.isMemberOfRelation);
-        uriRangeProps.add(LDP.inbox);
-        uriRangeProps.add(LDP.insertedContentRelation);
-        propertiesWithUriRange = unmodifiableSet(uriRangeProps);
-    }
+    private static final Set<IRI> propertiesWithInDomainRange = unmodifiableSet(new HashSet<IRI>() { {
+        add(ACL.accessControl);
+        add(LDP.membershipResource);
+    }});
+
+    private static final Set<IRI> propertiesWithUriRange = unmodifiableSet(new HashSet<IRI>() { {
+        add(ACL.accessControl);
+        add(LDP.membershipResource);
+        add(LDP.hasMemberRelation);
+        add(LDP.isMemberOfRelation);
+        add(LDP.inbox);
+        add(LDP.insertedContentRelation);
+    }});
 
     // Ensure that any LDP properties are appropriate for the interaction model
     private static Predicate<Triple> propertyFilter(final IRI model) {
