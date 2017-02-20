@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 import edu.amherst.acdc.trellis.spi.ConstraintService;
 import edu.amherst.acdc.trellis.vocabulary.ACL;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.OA;
 import edu.amherst.acdc.trellis.vocabulary.RDF;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Graph;
@@ -84,6 +85,7 @@ public class LdpConstraints implements ConstraintService {
         add(LDP.isMemberOfRelation);
         add(LDP.inbox);
         add(LDP.insertedContentRelation);
+        add(OA.annotationService);
     }});
 
     // Ensure that any LDP properties are appropriate for the interaction model
