@@ -91,13 +91,6 @@ public class LdpConstraints implements ConstraintService {
         return of(model).filter(typeMap::containsKey).map(typeMap::get).orElse(basicConstraints);
     }
 
-    // Ensure that RDF graphs adhere to the single-subject rule
-    private static Predicate<Triple> subjectFilter(final IRI context) {
-        return triple -> of(triple).map(Triple::getSubject)
-            .filter(iri -> !iri.equals(context) && !iri.ntriplesString().startsWith("<" + context.getIRIString() + "#"))
-            .isPresent();
-    }
-
     // Don't allow LDP types to be set explicitly
     private static Predicate<Triple> typeFilter(final IRI model) {
         return triple -> of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
@@ -137,11 +130,10 @@ public class LdpConstraints implements ConstraintService {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> of(triple).filter(propertyFilter(model)).map(t -> Stream.of(Trellis.InvalidProperty))
-            .orElseGet(() -> of(triple).filter(subjectFilter(context)).map(t -> Stream.of(Trellis.InvalidSubject))
             .orElseGet(() -> of(triple).filter(typeFilter(model)).map(t -> Stream.of(Trellis.InvalidType))
             .orElseGet(() -> of(triple).filter(uriRangeFilter).map(t -> Stream.of(Trellis.InvalidRange))
             .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain)).map(t -> Stream.of(Trellis.InvalidRange))
-            .orElse(empty())))));
+            .orElse(empty()))));
     }
 
     @Override

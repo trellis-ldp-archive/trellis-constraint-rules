@@ -52,17 +52,6 @@ public class LdpConstraintsTest {
             LDP.DirectContainer, LDP.IndirectContainer);
 
     @Test
-    public void testInvalidSubject() {
-        models.stream().forEach(type -> {
-            final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidSubject.ttl", subject),
-                    rdf.createIRI(domain + "bar"));
-            assertTrue(res.isPresent());
-            assertEquals(of(Trellis.InvalidSubject), res);
-        });
-    }
-
-    @Test
     public void testInvalidContainsProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";

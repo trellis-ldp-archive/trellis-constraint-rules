@@ -6,11 +6,10 @@ A set of constraints on a trellis repository defining the rules that govern vali
 
 These rules consist of:
 
-  * Single-subject rule -- RDF graphs must have a single subject, corresponding to the resource URI (hashURIs are allowed)
   * No inappropriate LDP properties -- certain LDP properties can only be modified if the interaction model permits it
   * LDP Resource types cannot be set or changed by changing RDF triples
   * Certain properties (`acl:accessControl`, `ldp:membershipResource`) must be used with "in-domain" resources
-  * Certain properties must have a range of a URI and have a max-cardinality of 1 (`ldp:membershipResource`, `ldp:hasMemberRelation`, `ldp:isMemberOfRelation`, `ldp:insertedContentRelation`, `ldp:inbox`, `acl:accessControl`)
+  * Certain properties must have a range of a IRI and have a max-cardinality of 1 (`ldp:membershipResource`, `ldp:hasMemberRelation`, `ldp:isMemberOfRelation`, `ldp:insertedContentRelation`, `ldp:inbox`, `acl:accessControl`)
 
 ## Building
 
