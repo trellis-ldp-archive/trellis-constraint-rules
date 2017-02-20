@@ -99,11 +99,10 @@ public class LdpConstraints implements ConstraintService {
             .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
     }
 
-    // Verify that the range of the property is a URI (if the property is in the above set)
+    // Verify that the range of the property is an IRI (if the property is in the above set)
     private static Predicate<Triple> uriRangeFilter = triple -> {
         return propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI);
     };
-
 
     // Verify that the range of the property is in the repository domain
     private static Predicate<Triple> inDomainRangeFilter(final String domain) {
