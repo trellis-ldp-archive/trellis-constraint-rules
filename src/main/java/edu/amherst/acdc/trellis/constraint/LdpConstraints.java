@@ -25,6 +25,13 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 
+import edu.amherst.acdc.trellis.spi.ConstraintService;
+import edu.amherst.acdc.trellis.vocabulary.ACL;
+import edu.amherst.acdc.trellis.vocabulary.LDP;
+import edu.amherst.acdc.trellis.vocabulary.OA;
+import edu.amherst.acdc.trellis.vocabulary.RDF;
+import edu.amherst.acdc.trellis.vocabulary.Trellis;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,12 +42,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import edu.amherst.acdc.trellis.spi.ConstraintService;
-import edu.amherst.acdc.trellis.vocabulary.ACL;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
-import edu.amherst.acdc.trellis.vocabulary.OA;
-import edu.amherst.acdc.trellis.vocabulary.RDF;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDFTerm;
@@ -94,10 +95,9 @@ public class LdpConstraints implements ConstraintService {
     }
 
     // Don't allow LDP types to be set explicitly
-    private static Predicate<Triple> typeFilter(final IRI model) {
-        return triple -> of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
+    private static final Predicate<Triple> typeFilter = triple ->
+        of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
             .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
-    }
 
     // Verify that the range of the property is an IRI (if the property is in the above set)
     private static Predicate<Triple> uriRangeFilter = triple -> {
@@ -127,19 +127,19 @@ public class LdpConstraints implements ConstraintService {
         this.domain = domain;
     }
 
-    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model, final IRI context) {
+    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model) {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> of(triple).filter(propertyFilter(model)).map(t -> Stream.of(Trellis.InvalidProperty))
-            .orElseGet(() -> of(triple).filter(typeFilter(model)).map(t -> Stream.of(Trellis.InvalidType))
+            .orElseGet(() -> of(triple).filter(typeFilter).map(t -> Stream.of(Trellis.InvalidType))
             .orElseGet(() -> of(triple).filter(uriRangeFilter).map(t -> Stream.of(Trellis.InvalidRange))
             .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain)).map(t -> Stream.of(Trellis.InvalidRange))
             .orElse(empty()))));
     }
 
     @Override
-    public Optional<IRI> constrainedBy(final IRI model, final Graph graph, final IRI context) {
-        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, context)).findAny()
+    public Optional<IRI> constrainedBy(final IRI model, final Graph graph) {
+        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model)).findAny()
             .orElseGet(() -> of(graph).filter(checkCardinality).map(t -> Trellis.InvalidCardinality)
             .orElse(null)));
     }

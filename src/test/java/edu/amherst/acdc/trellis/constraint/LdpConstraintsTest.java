@@ -24,12 +24,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-import java.util.Optional;
-
 import edu.amherst.acdc.trellis.spi.ConstraintService;
 import edu.amherst.acdc.trellis.vocabulary.LDP;
 import edu.amherst.acdc.trellis.vocabulary.Trellis;
+
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.jena.JenaRDF;
@@ -55,8 +56,7 @@ public class LdpConstraintsTest {
     public void testInvalidContainsProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasLdpContainsTriples.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasLdpContainsTriples.ttl", subject));
             assertTrue(res.isPresent());
             assertEquals(of(Trellis.InvalidProperty), res);
         });
@@ -66,8 +66,7 @@ public class LdpConstraintsTest {
     public void testInvalidInsertedContentRelation() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasInsertedContent.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasInsertedContent.ttl", subject));
             if (type.equals(LDP.IndirectContainer)) {
                 assertEquals(Optional.empty(), res);
                 assertFalse(res.isPresent());
@@ -82,8 +81,7 @@ public class LdpConstraintsTest {
     public void testInvalidLdpProps() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/basicContainer.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/basicContainer.ttl", subject));
             if (type.equals(LDP.IndirectContainer) || type.equals(LDP.DirectContainer)) {
                 assertEquals(Optional.empty(), res);
                 assertFalse(res.isPresent());
@@ -98,8 +96,7 @@ public class LdpConstraintsTest {
     public void testInvalidType() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/withLdpType.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/withLdpType.ttl", subject));
             assertTrue(res.isPresent());
             assertEquals(of(Trellis.InvalidType), res);
         });
@@ -109,8 +106,7 @@ public class LdpConstraintsTest {
     public void testInvalidDomain() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidDomain.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidDomain.ttl", subject));
             assertTrue(res.isPresent());
             assertEquals(of(Trellis.InvalidRange), res);
         });
@@ -120,8 +116,7 @@ public class LdpConstraintsTest {
     public void testCardinality() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidCardinality.ttl", subject),
-                    rdf.createIRI(subject));
+            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidCardinality.ttl", subject));
             assertTrue(res.isPresent());
             assertEquals(of(Trellis.InvalidCardinality), res);
         });
