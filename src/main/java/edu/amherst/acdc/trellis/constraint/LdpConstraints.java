@@ -17,12 +17,12 @@ package edu.amherst.acdc.trellis.constraint;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Stream.empty;
 
 import edu.amherst.acdc.trellis.spi.ConstraintService;
@@ -34,7 +34,6 @@ import edu.amherst.acdc.trellis.vocabulary.Trellis;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -52,17 +51,19 @@ import org.apache.commons.rdf.api.Triple;
  */
 public class LdpConstraints implements ConstraintService {
 
-    private static Predicate<Triple> indirectConstraints = triple ->
+    // Identify those predicates that are prohibited in the given ixn model
+    private static final Predicate<Triple> indirectConstraints = triple ->
         triple.getPredicate().equals(LDP.contains);
 
-    private static Predicate<Triple> directConstraints = indirectConstraints.or(triple ->
+    // Identify those predicates that are prohibited in the given ixn model
+    private static final Predicate<Triple> directConstraints = indirectConstraints.or(triple ->
         triple.getPredicate().equals(LDP.insertedContentRelation));
 
-    private static Predicate<Triple> basicConstraints = directConstraints.or(triple ->
+    // Identify those predicates that are prohibited in the given ixn model
+    private static final Predicate<Triple> basicConstraints = directConstraints.or(triple ->
         triple.getPredicate().equals(LDP.membershipResource) ||
         triple.getPredicate().equals(LDP.hasMemberRelation) ||
         triple.getPredicate().equals(LDP.isMemberOfRelation));
-
 
     private static final Map<IRI, Predicate<Triple>> typeMap = unmodifiableMap(new HashMap<IRI, Predicate<Triple>>() { {
         put(LDP.BasicContainer, basicConstraints);
@@ -72,7 +73,6 @@ public class LdpConstraints implements ConstraintService {
         put(LDP.NonRDFSource, basicConstraints);
         put(LDP.RDFSource, basicConstraints);
     }});
-
 
     private static final Set<IRI> propertiesWithInDomainRange = unmodifiableSet(new HashSet<IRI>() { {
         add(ACL.accessControl);
@@ -110,12 +110,31 @@ public class LdpConstraints implements ConstraintService {
             !triple.getObject().ntriplesString().startsWith("<" + domain);
     }
 
+    private static Boolean hasMembershipProps(final Map<IRI, Long> data) {
+        return data.containsKey(LDP.membershipResource) &&
+            data.getOrDefault(LDP.hasMemberRelation, 0L) + data.getOrDefault(LDP.isMemberOfRelation, 0L) == 1L;
+    }
+
     // Verify that the cardinality of the `propertiesWithUriRange` properties. Keep any whose cardinality is > 1
-    private static Predicate<Graph> checkCardinality = graph ->
-        graph.stream().filter(triple -> propertiesWithUriRange.contains(triple.getPredicate()))
-            .collect(groupingBy(Triple::getPredicate, mapping(Triple::getObject, toList())))
-            .entrySet().stream().map(Map.Entry::getValue).map(List::size)
-            .anyMatch(val -> val > 1);
+    private static Predicate<Graph> checkCardinality(final IRI model) {
+        return graph -> {
+            final Map<IRI, Long> cardinality = graph.stream()
+                .filter(triple -> propertiesWithUriRange.contains(triple.getPredicate()))
+                .collect(groupingBy(Triple::getPredicate, counting()));
+
+            if (LDP.IndirectContainer.equals(model)) {
+                if (isNull(cardinality.get(LDP.insertedContentRelation)) || !hasMembershipProps(cardinality)) {
+                    return true;
+                }
+            } else if (LDP.DirectContainer.equals(model)) {
+                if (!hasMembershipProps(cardinality)) {
+                    return true;
+                }
+            }
+
+            return cardinality.entrySet().stream().map(Map.Entry::getValue).anyMatch(val -> val > 1);
+        };
+    }
 
     private final String domain;
 
@@ -140,7 +159,7 @@ public class LdpConstraints implements ConstraintService {
     @Override
     public Optional<IRI> constrainedBy(final IRI model, final Graph graph) {
         return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model)).findAny()
-            .orElseGet(() -> of(graph).filter(checkCardinality).map(t -> Trellis.InvalidCardinality)
+            .orElseGet(() -> of(graph).filter(checkCardinality(model)).map(t -> Trellis.InvalidCardinality)
             .orElse(null)));
     }
 }
