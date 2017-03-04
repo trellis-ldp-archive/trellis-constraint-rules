@@ -21,8 +21,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.empty;
 
 import edu.amherst.acdc.trellis.spi.ConstraintService;
@@ -110,6 +110,7 @@ public class LdpConstraints implements ConstraintService {
             !triple.getObject().ntriplesString().startsWith("<" + domain);
     }
 
+    // Verify that ldp:membershipResource and one of ldp:hasMemberRelation or ldp:isMemberOfRelation is present
     private static Boolean hasMembershipProps(final Map<IRI, Long> data) {
         return data.containsKey(LDP.membershipResource) &&
             data.getOrDefault(LDP.hasMemberRelation, 0L) + data.getOrDefault(LDP.isMemberOfRelation, 0L) == 1L;
