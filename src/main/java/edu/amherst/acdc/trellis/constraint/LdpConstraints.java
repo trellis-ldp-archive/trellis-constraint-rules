@@ -99,10 +99,15 @@ public class LdpConstraints implements ConstraintService {
         of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
             .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
 
+    // Verify that the object of a triple whose predicate is either ldp:hasMemberRelation or ldp:isMemberOfRelation
+    // is not equal to ldp:contains
+    private static Predicate<Triple> invalidMembershipProperty = triple ->
+        LDP.contains.equals(triple.getObject()) && (LDP.hasMemberRelation.equals(triple.getPredicate()) ||
+                LDP.isMemberOfRelation.equals(triple.getPredicate()));
+
     // Verify that the range of the property is an IRI (if the property is in the above set)
-    private static Predicate<Triple> uriRangeFilter = triple -> {
-        return propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI);
-    };
+    private static Predicate<Triple> uriRangeFilter = invalidMembershipProperty.or(triple ->
+        propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI));
 
     // Verify that the range of the property is in the repository domain
     private static Predicate<Triple> inDomainRangeFilter(final String domain) {

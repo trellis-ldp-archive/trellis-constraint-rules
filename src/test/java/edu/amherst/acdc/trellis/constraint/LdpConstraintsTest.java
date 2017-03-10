@@ -106,6 +106,20 @@ public class LdpConstraintsTest {
     }
 
     @Test
+    public void testMembershipTriples1() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.IndirectContainer,
+                asGraph("/invalidMembershipTriple.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidRange), res);
+    }
+
+    @Test
+    public void testMembershipTriples2() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.DirectContainer,
+                asGraph("/invalidMembershipTriple2.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidRange), res);
+    }
+
+    @Test
     public void testCardinality() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
