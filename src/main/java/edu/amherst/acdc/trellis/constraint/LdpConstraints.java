@@ -89,6 +89,13 @@ public class LdpConstraints implements ConstraintService {
         add(OA.annotationService);
     }});
 
+
+    private static final Set<IRI> restrictedMemberProperties = unmodifiableSet(new HashSet<IRI>() { {
+        add(LDP.contains);
+        add(RDF.type);
+        addAll(propertiesWithUriRange);
+    }});
+
     // Ensure that any LDP properties are appropriate for the interaction model
     private static Predicate<Triple> propertyFilter(final IRI model) {
         return of(model).filter(typeMap::containsKey).map(typeMap::get).orElse(basicConstraints);
@@ -100,10 +107,10 @@ public class LdpConstraints implements ConstraintService {
             .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
 
     // Verify that the object of a triple whose predicate is either ldp:hasMemberRelation or ldp:isMemberOfRelation
-    // is not equal to ldp:contains
+    // is not equal to ldp:contains or any of the other cardinality-restricted IRIs
     private static Predicate<Triple> invalidMembershipProperty = triple ->
-        LDP.contains.equals(triple.getObject()) && (LDP.hasMemberRelation.equals(triple.getPredicate()) ||
-                LDP.isMemberOfRelation.equals(triple.getPredicate()));
+        (LDP.hasMemberRelation.equals(triple.getPredicate()) || LDP.isMemberOfRelation.equals(triple.getPredicate())) &&
+        restrictedMemberProperties.contains(triple.getObject());
 
     // Verify that the range of the property is an IRI (if the property is in the above set)
     private static Predicate<Triple> uriRangeFilter = invalidMembershipProperty.or(triple ->
