@@ -1,5 +1,5 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#>
 @prefix dc: <http://purl.org/dc/terms/>
 
-<> ldp:contains <info:trellis/bar> .
+<> ldp:contains <info:trellisrepo/bar> .
 <#hash> dc:title "some title" .

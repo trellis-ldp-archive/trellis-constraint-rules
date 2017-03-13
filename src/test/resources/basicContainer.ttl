@@ -1,7 +1,7 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#>
 @prefix dc: <http://purl.org/dc/terms/>
 
-<> ldp:membershipResource <info:trellis/some-resource> ;
+<> ldp:membershipResource <info:trellisrepo/some-resource> ;
    ldp:hasMemberRelation dc:isPartOf .
 <#hash> dc:title "Some Title"@en .
 
