@@ -43,7 +43,7 @@ public class LdpConstraintsTest {
 
     private static final JenaRDF rdf = new JenaRDF();
 
-    private final String domain = "info:trellisrepo/";
+    private final String domain = "trellis:repository/";
 
     private final ConstraintService svc = new LdpConstraints(domain);
 
