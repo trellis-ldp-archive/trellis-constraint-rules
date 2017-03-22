@@ -64,7 +64,7 @@ public class LdpConstraintsTest {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
             final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasInsertedContent.ttl", subject));
-            if (type.equals(LDP.IndirectContainer)) {
+            if (type.equals(LDP.IndirectContainer) || type.equals(LDP.DirectContainer)) {
                 assertEquals(Optional.empty(), res);
             } else {
                 assertEquals(of(Trellis.InvalidProperty), res);
@@ -77,9 +77,7 @@ public class LdpConstraintsTest {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
             final Optional<IRI> res = svc.constrainedBy(type, asGraph("/basicContainer.ttl", subject));
-            if (type.equals(LDP.IndirectContainer)) {
-                assertEquals(of(Trellis.InvalidCardinality), res);
-            } else if (type.equals(LDP.DirectContainer)) {
+            if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
                 assertEquals(Optional.empty(), res);
             } else {
                 assertEquals(of(Trellis.InvalidProperty), res);

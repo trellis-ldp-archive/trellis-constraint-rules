@@ -52,15 +52,12 @@ import org.apache.commons.rdf.api.Triple;
 public class LdpConstraints implements ConstraintService {
 
     // Identify those predicates that are prohibited in the given ixn model
-    private static final Predicate<Triple> indirectConstraints = triple ->
+    private static final Predicate<Triple> memberContainerConstraints = triple ->
         triple.getPredicate().equals(LDP.contains);
 
     // Identify those predicates that are prohibited in the given ixn model
-    private static final Predicate<Triple> directConstraints = indirectConstraints.or(triple ->
-        triple.getPredicate().equals(LDP.insertedContentRelation));
-
-    // Identify those predicates that are prohibited in the given ixn model
-    private static final Predicate<Triple> basicConstraints = directConstraints.or(triple ->
+    private static final Predicate<Triple> basicConstraints = memberContainerConstraints.or(triple ->
+        triple.getPredicate().equals(LDP.insertedContentRelation) ||
         triple.getPredicate().equals(LDP.membershipResource) ||
         triple.getPredicate().equals(LDP.hasMemberRelation) ||
         triple.getPredicate().equals(LDP.isMemberOfRelation));
@@ -68,8 +65,8 @@ public class LdpConstraints implements ConstraintService {
     private static final Map<IRI, Predicate<Triple>> typeMap = unmodifiableMap(new HashMap<IRI, Predicate<Triple>>() { {
         put(LDP.BasicContainer, basicConstraints);
         put(LDP.Container, basicConstraints);
-        put(LDP.DirectContainer, directConstraints);
-        put(LDP.IndirectContainer, indirectConstraints);
+        put(LDP.DirectContainer, memberContainerConstraints);
+        put(LDP.IndirectContainer, memberContainerConstraints);
         put(LDP.NonRDFSource, basicConstraints);
         put(LDP.RDFSource, basicConstraints);
     }});
