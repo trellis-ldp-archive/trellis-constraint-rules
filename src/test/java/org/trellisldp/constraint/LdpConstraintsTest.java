@@ -1,6 +1,4 @@
 /*
- * Copyright Amherst College
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.amherst.acdc.trellis.constraint;
+package org.trellisldp.constraint;
 
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
@@ -22,9 +20,9 @@ import static org.apache.jena.riot.RDFDataMgr.read;
 import static org.apache.jena.riot.Lang.TURTLE;
 import static org.junit.Assert.assertEquals;
 
-import edu.amherst.acdc.trellis.spi.ConstraintService;
-import edu.amherst.acdc.trellis.vocabulary.LDP;
-import edu.amherst.acdc.trellis.vocabulary.Trellis;
+import org.trellisldp.spi.ConstraintService;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.Trellis;
 
 import java.util.List;
 import java.util.Optional;
