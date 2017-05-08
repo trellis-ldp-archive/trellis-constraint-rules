@@ -23,13 +23,6 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.empty;
 
-import org.trellisldp.spi.ConstraintService;
-import org.trellisldp.vocabulary.ACL;
-import org.trellisldp.vocabulary.LDP;
-import org.trellisldp.vocabulary.OA;
-import org.trellisldp.vocabulary.RDF;
-import org.trellisldp.vocabulary.Trellis;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,6 +36,12 @@ import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
+import org.trellisldp.spi.ConstraintService;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.OA;
+import org.trellisldp.vocabulary.RDF;
+import org.trellisldp.vocabulary.Trellis;
 
 /**
  * @author acoburn
