@@ -22,6 +22,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.empty;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import org.apache.commons.rdf.api.Graph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
+import org.slf4j.Logger;
 import org.trellisldp.spi.ConstraintService;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.LDP;
@@ -47,6 +49,8 @@ import org.trellisldp.vocabulary.Trellis;
  * @author acoburn
  */
 public class LdpConstraints implements ConstraintService {
+
+    private static final Logger LOGGER = getLogger(LdpConstraints.class);
 
     // Identify those predicates that are prohibited in the given ixn model
     private static final Predicate<Triple> memberContainerConstraints = triple ->
@@ -143,6 +147,24 @@ public class LdpConstraints implements ConstraintService {
         };
     }
 
+    private static void logPredicate(final IRI constraint, final Triple triple) {
+        final String c = constraint.getIRIString();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(c + ": " + triple);
+        } else {
+            LOGGER.warn(c.split("#", 2)[1] + ": " + triple.getPredicate().ntriplesString());
+        }
+    }
+
+    private static void logObject(final IRI constraint, final Triple triple) {
+        final String c = constraint.getIRIString();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(c + ": " + triple);
+        } else {
+            LOGGER.warn(c.split("#", 2) + ": " + triple.getObject().ntriplesString());
+        }
+    }
+
     private final String domain;
 
     /**
@@ -156,10 +178,14 @@ public class LdpConstraints implements ConstraintService {
     private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model) {
         requireNonNull(model, "The interaction model must not be null!");
 
-        return triple -> of(triple).filter(propertyFilter(model)).map(t -> Stream.of(Trellis.InvalidProperty))
-            .orElseGet(() -> of(triple).filter(typeFilter).map(t -> Stream.of(Trellis.InvalidType))
-            .orElseGet(() -> of(triple).filter(uriRangeFilter).map(t -> Stream.of(Trellis.InvalidRange))
-            .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain)).map(t -> Stream.of(Trellis.InvalidRange))
+        return triple -> of(triple).filter(propertyFilter(model))
+                .map(t -> Stream.of(Trellis.InvalidProperty).peek(x -> logPredicate(x, t)))
+            .orElseGet(() -> of(triple).filter(typeFilter)
+                .map(t -> Stream.of(Trellis.InvalidType).peek(x -> logObject(x, t)))
+            .orElseGet(() -> of(triple).filter(uriRangeFilter)
+                .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
+            .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain))
+                .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
             .orElse(empty()))));
     }
 
