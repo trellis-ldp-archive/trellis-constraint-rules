@@ -43,7 +43,7 @@ public class LdpConstraintsTest {
 
     private final String domain = "trellis:repository/";
 
-    private final ConstraintService svc = new LdpConstraints(domain);
+    private final ConstraintService svc = new LdpConstraints();
 
     private final List<IRI> models = asList(LDP.RDFSource, LDP.NonRDFSource, LDP.Container, LDP.Resource,
             LDP.DirectContainer, LDP.IndirectContainer);
@@ -52,7 +52,7 @@ public class LdpConstraintsTest {
     public void testInvalidContainsProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasLdpContainsTriples.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasLdpContainsTriples.ttl", subject));
             assertEquals(of(Trellis.InvalidProperty), res);
         });
     }
@@ -61,7 +61,7 @@ public class LdpConstraintsTest {
     public void testInvalidInsertedContentRelation() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/hasInsertedContent.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasInsertedContent.ttl", subject));
             if (type.equals(LDP.IndirectContainer) || type.equals(LDP.DirectContainer)) {
                 assertEquals(Optional.empty(), res);
             } else {
@@ -74,7 +74,7 @@ public class LdpConstraintsTest {
     public void testInvalidLdpProps() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/basicContainer.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/basicContainer.ttl", subject));
             if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
                 assertEquals(Optional.empty(), res);
             } else {
@@ -87,7 +87,7 @@ public class LdpConstraintsTest {
     public void testInvalidType() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/withLdpType.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/withLdpType.ttl", subject));
             assertEquals(of(Trellis.InvalidType), res);
         });
     }
@@ -96,7 +96,7 @@ public class LdpConstraintsTest {
     public void testInvalidDomain() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidDomain.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/invalidDomain.ttl", subject));
             assertEquals(of(Trellis.InvalidRange), res);
         });
     }
@@ -104,14 +104,14 @@ public class LdpConstraintsTest {
     @Test
     public void testMembershipTriples1() {
         final Optional<IRI> res = svc.constrainedBy(LDP.IndirectContainer,
-                asGraph("/invalidMembershipTriple.ttl", domain + "foo"));
+                domain, asGraph("/invalidMembershipTriple.ttl", domain + "foo"));
         assertEquals(of(Trellis.InvalidRange), res);
     }
 
     @Test
     public void testMembershipTriples2() {
         final Optional<IRI> res = svc.constrainedBy(LDP.DirectContainer,
-                asGraph("/invalidMembershipTriple2.ttl", domain + "foo"));
+                domain, asGraph("/invalidMembershipTriple2.ttl", domain + "foo"));
         assertEquals(of(Trellis.InvalidRange), res);
     }
 
@@ -119,7 +119,7 @@ public class LdpConstraintsTest {
     public void testCardinality() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, asGraph("/invalidCardinality.ttl", subject));
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/invalidCardinality.ttl", subject));
             assertEquals(of(Trellis.InvalidCardinality), res);
         });
     }

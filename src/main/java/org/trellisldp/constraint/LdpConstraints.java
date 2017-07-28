@@ -165,17 +165,7 @@ public class LdpConstraints implements ConstraintService {
         }
     }
 
-    private final String domain;
-
-    /**
-     * Create a LpdConstraints service
-     * @param domain the repository domain
-     */
-    public LdpConstraints(final String domain) {
-        this.domain = domain;
-    }
-
-    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model) {
+    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model, final String domain) {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> of(triple).filter(propertyFilter(model))
@@ -190,8 +180,8 @@ public class LdpConstraints implements ConstraintService {
     }
 
     @Override
-    public Optional<IRI> constrainedBy(final IRI model, final Graph graph) {
-        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model)).findAny()
+    public Optional<IRI> constrainedBy(final IRI model, final String domain, final Graph graph) {
+        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, domain)).findAny()
             .orElseGet(() -> of(graph).filter(checkCardinality(model)).map(t -> Trellis.InvalidCardinality)
             .orElse(null)));
     }
