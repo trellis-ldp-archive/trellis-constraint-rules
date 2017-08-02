@@ -161,7 +161,7 @@ public class LdpConstraints implements ConstraintService {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(c + ": " + triple);
         } else {
-            LOGGER.warn(c.split("#", 2) + ": " + triple.getObject().ntriplesString());
+            LOGGER.warn(c.split("#", 2)[1] + ": " + triple.getObject().ntriplesString());
         }
     }
 
