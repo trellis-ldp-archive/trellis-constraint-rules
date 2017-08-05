@@ -1,6 +1,7 @@
 # trellis-constraint-rules
 
 [![Build Status](https://travis-ci.org/trellis-ldp/trellis-constraint-rules.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-constraint-rules)
+[![Coverage Status](https://coveralls.io/repos/github/trellis-ldp/trellis-constraint-rules/badge.svg?branch=master)](https://coveralls.io/github/trellis-ldp/trellis-constraint-rules?branch=master)
 
 A set of constraints on a trellis repository defining the rules that govern valid RDF.
 
