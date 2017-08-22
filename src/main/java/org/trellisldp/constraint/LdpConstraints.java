@@ -54,7 +54,7 @@ public class LdpConstraints implements ConstraintService {
 
     // Identify those predicates that are prohibited in the given ixn model
     private static final Predicate<Triple> memberContainerConstraints = triple ->
-        triple.getPredicate().equals(LDP.contains);
+        triple.getPredicate().equals(ACL.accessControl) || triple.getPredicate().equals(LDP.contains);
 
     // Identify those predicates that are prohibited in the given ixn model
     private static final Predicate<Triple> basicConstraints = memberContainerConstraints.or(triple ->
@@ -73,12 +73,10 @@ public class LdpConstraints implements ConstraintService {
     }});
 
     private static final Set<IRI> propertiesWithInDomainRange = unmodifiableSet(new HashSet<IRI>() { {
-        add(ACL.accessControl);
         add(LDP.membershipResource);
     }});
 
     private static final Set<IRI> propertiesWithUriRange = unmodifiableSet(new HashSet<IRI>() { {
-        add(ACL.accessControl);
         add(LDP.membershipResource);
         add(LDP.hasMemberRelation);
         add(LDP.isMemberOfRelation);
@@ -89,6 +87,7 @@ public class LdpConstraints implements ConstraintService {
 
 
     private static final Set<IRI> restrictedMemberProperties = unmodifiableSet(new HashSet<IRI>() { {
+        add(ACL.accessControl);
         add(LDP.contains);
         add(RDF.type);
         addAll(propertiesWithUriRange);

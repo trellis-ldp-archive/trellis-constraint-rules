@@ -19,6 +19,8 @@ import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.jena.riot.RDFDataMgr.read;
 import static org.apache.jena.riot.Lang.TURTLE;
 import static org.junit.Assert.assertEquals;
+import static org.slf4j.LoggerFactory.getLogger;
+import static ch.qos.logback.classic.Level.DEBUG;
 
 import org.trellisldp.spi.ConstraintService;
 import org.trellisldp.vocabulary.LDP;
@@ -33,6 +35,7 @@ import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.rdf.model.Model;
 
 import org.junit.Test;
+import ch.qos.logback.classic.Logger;
 
 /**
  * @author acoburn
@@ -94,10 +97,16 @@ public class LdpConstraintsTest {
 
     @Test
     public void testInvalidDomain() {
+        // While we're at it, test the debug logging case
+        ((Logger) getLogger(LdpConstraints.class)).setLevel(DEBUG);
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
             final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/invalidDomain.ttl", subject));
-            assertEquals(of(Trellis.InvalidRange), res);
+            if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
+                assertEquals(of(Trellis.InvalidRange), res);
+            } else {
+                assertEquals(of(Trellis.InvalidProperty), res);
+            }
         });
     }
 

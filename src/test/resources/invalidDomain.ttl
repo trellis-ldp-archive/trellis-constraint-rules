@@ -2,6 +2,7 @@
 @prefix dc: <http://purl.org/dc/terms/>
 @prefix acl: <http://www.w3.org/ns/auth/acl#>
 
-<> acl:accessControl dc:subject .
+<> ldp:membershipResource dc:subject ;
+    ldp:hasMemberRelation dc:creator .
 <#hash> dc:title "Some Title"@en .
 
