@@ -95,6 +95,7 @@ jar {
         vendor project.vendor
         license project.license
 
+        instruction 'Automatic-Module-Name', 'org.trellisldp.constraint'
         instruction 'Import-Package', '*'
         instruction 'Export-Package', "org.trellisldp.constraint;version=${projectOsgiVersion}"
     }
