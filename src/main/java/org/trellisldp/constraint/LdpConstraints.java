@@ -13,6 +13,7 @@
  */
 package org.trellisldp.constraint;
 
+import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.isNull;
@@ -63,35 +64,48 @@ public class LdpConstraints implements ConstraintService {
         triple.getPredicate().equals(LDP.hasMemberRelation) ||
         triple.getPredicate().equals(LDP.isMemberOfRelation));
 
-    private static final Map<IRI, Predicate<Triple>> typeMap = unmodifiableMap(new HashMap<IRI, Predicate<Triple>>() { {
-        put(LDP.BasicContainer, basicConstraints);
-        put(LDP.Container, basicConstraints);
-        put(LDP.DirectContainer, memberContainerConstraints);
-        put(LDP.IndirectContainer, memberContainerConstraints);
-        put(LDP.NonRDFSource, basicConstraints);
-        put(LDP.RDFSource, basicConstraints);
-    }});
+    private static final Set<IRI> propertiesWithInDomainRange = singleton(LDP.membershipResource);
 
-    private static final Set<IRI> propertiesWithInDomainRange = unmodifiableSet(new HashSet<IRI>() { {
-        add(LDP.membershipResource);
-    }});
+    private static final Map<IRI, Predicate<Triple>> typeMap;
 
-    private static final Set<IRI> propertiesWithUriRange = unmodifiableSet(new HashSet<IRI>() { {
-        add(LDP.membershipResource);
-        add(LDP.hasMemberRelation);
-        add(LDP.isMemberOfRelation);
-        add(LDP.inbox);
-        add(LDP.insertedContentRelation);
-        add(OA.annotationService);
-    }});
+    static {
+        // TODO - JDK9 initializer
+        final Map<IRI, Predicate<Triple>> data = new HashMap<>();
+        data.put(LDP.BasicContainer, basicConstraints);
+        data.put(LDP.Container, basicConstraints);
+        data.put(LDP.DirectContainer, memberContainerConstraints);
+        data.put(LDP.IndirectContainer, memberContainerConstraints);
+        data.put(LDP.NonRDFSource, basicConstraints);
+        data.put(LDP.RDFSource, basicConstraints);
 
+        typeMap = unmodifiableMap(data);
+    }
 
-    private static final Set<IRI> restrictedMemberProperties = unmodifiableSet(new HashSet<IRI>() { {
-        add(ACL.accessControl);
-        add(LDP.contains);
-        add(RDF.type);
-        addAll(propertiesWithUriRange);
-    }});
+    private static final Set<IRI> propertiesWithUriRange;
+
+    static {
+        // TODO - JDK9 initializer
+        final Set<IRI> data = new HashSet<>();
+        data.add(LDP.membershipResource);
+        data.add(LDP.hasMemberRelation);
+        data.add(LDP.isMemberOfRelation);
+        data.add(LDP.inbox);
+        data.add(LDP.insertedContentRelation);
+        data.add(OA.annotationService);
+        propertiesWithUriRange = unmodifiableSet(data);
+    }
+
+    private static final Set<IRI> restrictedMemberProperties;
+
+    static {
+        // TODO - JDK9 initializer
+        final Set<IRI> data = new HashSet<>();
+        data.add(ACL.accessControl);
+        data.add(LDP.contains);
+        data.add(RDF.type);
+        data.addAll(propertiesWithUriRange);
+        restrictedMemberProperties = unmodifiableSet(data);
+    }
 
     // Ensure that any LDP properties are appropriate for the interaction model
     private static Predicate<Triple> propertyFilter(final IRI model) {
@@ -101,7 +115,7 @@ public class LdpConstraints implements ConstraintService {
     // Don't allow LDP types to be set explicitly
     private static final Predicate<Triple> typeFilter = triple ->
         of(triple).filter(t -> t.getPredicate().equals(RDF.type)).map(Triple::getObject)
-            .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.uri)).isPresent();
+            .map(RDFTerm::ntriplesString).filter(str -> str.startsWith("<" + LDP.URI)).isPresent();
 
     // Verify that the object of a triple whose predicate is either ldp:hasMemberRelation or ldp:isMemberOfRelation
     // is not equal to ldp:contains or any of the other cardinality-restricted IRIs
@@ -136,10 +150,8 @@ public class LdpConstraints implements ConstraintService {
                 if (isNull(cardinality.get(LDP.insertedContentRelation)) || !hasMembershipProps(cardinality)) {
                     return true;
                 }
-            } else if (LDP.DirectContainer.equals(model)) {
-                if (!hasMembershipProps(cardinality)) {
-                    return true;
-                }
+            } else if (LDP.DirectContainer.equals(model) && !hasMembershipProps(cardinality)) {
+                return true;
             }
 
             return cardinality.entrySet().stream().map(Map.Entry::getValue).anyMatch(val -> val > 1);
