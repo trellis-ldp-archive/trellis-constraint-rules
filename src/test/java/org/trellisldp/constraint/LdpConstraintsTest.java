@@ -52,6 +52,15 @@ public class LdpConstraintsTest {
             LDP.DirectContainer, LDP.IndirectContainer);
 
     @Test
+    public void testInvalidAccessControlProperty() {
+        models.stream().forEach(type -> {
+            final String subject = domain + "foo";
+            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasAccessControlTriples.ttl", subject));
+            assertEquals(of(Trellis.InvalidProperty), res);
+        });
+    }
+
+    @Test
     public void testInvalidContainsProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
@@ -108,6 +117,41 @@ public class LdpConstraintsTest {
                 assertEquals(of(Trellis.InvalidProperty), res);
             }
         });
+    }
+
+    @Test
+    public void testInvalidInbox() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.RDFSource, domain,
+                asGraph("/invalidInbox.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidRange), res);
+    }
+
+    @Test
+    public void testTooManyMembershipTriples() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.IndirectContainer, domain,
+                asGraph("/tooManyMembershipTriples.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidCardinality), res);
+    }
+
+    @Test
+    public void testBasicConstraints1() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+                asGraph("/invalidContainer1.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidProperty), res);
+    }
+
+    @Test
+    public void testBasicConstraints2() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+                asGraph("/invalidContainer2.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidProperty), res);
+    }
+
+    @Test
+    public void testBasicConstraints3() {
+        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+                asGraph("/invalidContainer3.ttl", domain + "foo"));
+        assertEquals(of(Trellis.InvalidProperty), res);
     }
 
     @Test
