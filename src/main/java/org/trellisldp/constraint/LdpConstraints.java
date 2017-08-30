@@ -22,7 +22,6 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Stream.empty;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashMap;
@@ -187,7 +186,7 @@ public class LdpConstraints implements ConstraintService {
                 .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
             .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain))
                 .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
-            .orElse(empty()))));
+            .orElseGet(Stream::empty))));
     }
 
     @Override
