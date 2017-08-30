@@ -19,6 +19,7 @@ import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.jena.riot.RDFDataMgr.read;
 import static org.apache.jena.riot.Lang.TURTLE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.slf4j.LoggerFactory.getLogger;
 import static ch.qos.logback.classic.Level.DEBUG;
 
@@ -75,7 +76,7 @@ public class LdpConstraintsTest {
             final String subject = domain + "foo";
             final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasInsertedContent.ttl", subject));
             if (type.equals(LDP.IndirectContainer) || type.equals(LDP.DirectContainer)) {
-                assertEquals(Optional.empty(), res);
+                assertFalse(res.isPresent());
             } else {
                 assertEquals(of(Trellis.InvalidProperty), res);
             }
@@ -88,7 +89,7 @@ public class LdpConstraintsTest {
             final String subject = domain + "foo";
             final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/basicContainer.ttl", subject));
             if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
-                assertEquals(Optional.empty(), res);
+                assertFalse(res.isPresent());
             } else {
                 assertEquals(of(Trellis.InvalidProperty), res);
             }
