@@ -14,18 +14,13 @@
 package org.trellisldp.constraint;
 
 import static java.util.Arrays.asList;
-import static java.util.Optional.of;
 import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.jena.riot.RDFDataMgr.read;
 import static org.apache.jena.riot.Lang.TURTLE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.slf4j.LoggerFactory.getLogger;
-import static ch.qos.logback.classic.Level.DEBUG;
-
-import org.trellisldp.spi.ConstraintService;
-import org.trellisldp.vocabulary.LDP;
-import org.trellisldp.vocabulary.Trellis;
+import static org.junit.Assert.assertTrue;
+import static org.trellisldp.vocabulary.RDF.type;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +31,14 @@ import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.rdf.model.Model;
 
 import org.junit.Test;
-import ch.qos.logback.classic.Logger;
+import org.trellisldp.spi.ConstraintService;
+import org.trellisldp.spi.ConstraintViolation;
+import org.trellisldp.vocabulary.ACL;
+import org.trellisldp.vocabulary.DC;
+import org.trellisldp.vocabulary.LDP;
+import org.trellisldp.vocabulary.Trellis;
+
+
 
 /**
  * @author acoburn
@@ -56,8 +58,14 @@ public class LdpConstraintsTest {
     public void testInvalidAccessControlProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasAccessControlTriples.ttl", subject));
-            assertEquals(of(Trellis.InvalidProperty), res);
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain,
+                    asGraph("/hasAccessControlTriples.ttl", subject));
+            assertTrue(res.isPresent());
+            res.ifPresent(violation -> {
+                assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+                assertTrue(violation.getTriples().contains(
+                        rdf.createTriple(rdf.createIRI(subject), ACL.accessControl, rdf.createIRI(domain + "bar"))));
+            });
         });
     }
 
@@ -65,8 +73,14 @@ public class LdpConstraintsTest {
     public void testInvalidContainsProperty() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasLdpContainsTriples.ttl", subject));
-            assertEquals(of(Trellis.InvalidProperty), res);
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain,
+                    asGraph("/hasLdpContainsTriples.ttl", subject));
+            assertTrue(res.isPresent());
+            res.ifPresent(violation -> {
+                assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+                assertTrue(violation.getTriples().contains(
+                            rdf.createTriple(rdf.createIRI(subject), LDP.contains, rdf.createIRI(domain + "bar"))));
+            });
         });
     }
 
@@ -74,11 +88,17 @@ public class LdpConstraintsTest {
     public void testInvalidInsertedContentRelation() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/hasInsertedContent.ttl", subject));
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain, asGraph("/hasInsertedContent.ttl",
+                        subject));
             if (type.equals(LDP.IndirectContainer) || type.equals(LDP.DirectContainer)) {
                 assertFalse(res.isPresent());
             } else {
-                assertEquals(of(Trellis.InvalidProperty), res);
+                assertTrue(res.isPresent());
+                res.ifPresent(violation -> {
+                    assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+                    assertTrue(violation.getTriples().contains(
+                            rdf.createTriple(rdf.createIRI(subject), LDP.hasMemberRelation, DC.isPartOf)));
+                });
             }
         });
     }
@@ -87,94 +107,150 @@ public class LdpConstraintsTest {
     public void testInvalidLdpProps() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/basicContainer.ttl", subject));
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain, asGraph("/basicContainer.ttl",
+                        subject));
             if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
                 assertFalse(res.isPresent());
             } else {
-                assertEquals(of(Trellis.InvalidProperty), res);
+                assertTrue(res.isPresent());
+                res.ifPresent(violation -> {
+                    assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+                    assertTrue(violation.getTriples().contains(
+                            rdf.createTriple(rdf.createIRI(subject), LDP.hasMemberRelation, DC.isPartOf)));
+                });
             }
         });
     }
 
     @Test
     public void testInvalidType() {
-        models.stream().forEach(type -> {
+        models.stream().forEach(ldpType -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/withLdpType.ttl", subject));
-            assertEquals(of(Trellis.InvalidType), res);
+            final Optional<ConstraintViolation> res = svc.constrainedBy(ldpType, domain, asGraph("/withLdpType.ttl",
+                        subject));
+            assertTrue(res.isPresent());
+            res.ifPresent(violation -> {
+                assertEquals(Trellis.InvalidType, violation.getConstraint());
+                assertEquals(1L, violation.getTriples().size());
+                assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(subject), type,
+                                LDP.Resource)));
+            });
         });
     }
 
     @Test
     public void testInvalidDomain() {
-        // While we're at it, test the debug logging case
-        ((Logger) getLogger(LdpConstraints.class)).setLevel(DEBUG);
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/invalidDomain.ttl", subject));
-            if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
-                assertEquals(of(Trellis.InvalidRange), res);
-            } else {
-                assertEquals(of(Trellis.InvalidProperty), res);
-            }
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain, asGraph("/invalidDomain.ttl",
+                        subject));
+            assertTrue(res.isPresent());
+            res.ifPresent(violation -> {
+                if (type.equals(LDP.DirectContainer) || type.equals(LDP.IndirectContainer)) {
+                    assertEquals(Trellis.InvalidRange, violation.getConstraint());
+                    assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(subject),
+                                LDP.membershipResource, DC.subject)));
+                } else {
+                    assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+                    assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(subject),
+                                LDP.hasMemberRelation, DC.creator)));
+                }
+            });
         });
     }
 
     @Test
     public void testInvalidInbox() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.RDFSource, domain,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.RDFSource, domain,
                 asGraph("/invalidInbox.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidRange), res);
-    }
-
-    @Test
-    public void testTooManyMembershipTriples() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.IndirectContainer, domain,
-                asGraph("/tooManyMembershipTriples.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidCardinality), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidRange, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.inbox, rdf.createLiteral("invalid range", "en"))));
+        });
     }
 
     @Test
     public void testBasicConstraints1() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.Container, domain,
                 asGraph("/invalidContainer1.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidProperty), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.isMemberOfRelation, rdf.createIRI(domain + "resource"))));
+        });
     }
 
     @Test
     public void testBasicConstraints2() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.Container, domain,
                 asGraph("/invalidContainer2.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidProperty), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.insertedContentRelation, rdf.createIRI(domain + "resource"))));
+        });
     }
 
     @Test
     public void testBasicConstraints3() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.Container, domain,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.Container, domain,
                 asGraph("/invalidContainer3.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidProperty), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidProperty, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.membershipResource, rdf.createIRI(domain + "resource"))));
+        });
     }
 
     @Test
     public void testMembershipTriples1() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.IndirectContainer,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.IndirectContainer,
                 domain, asGraph("/invalidMembershipTriple.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidRange), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidRange, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.hasMemberRelation, LDP.contains)));
+        });
     }
 
     @Test
     public void testMembershipTriples2() {
-        final Optional<IRI> res = svc.constrainedBy(LDP.DirectContainer,
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.DirectContainer,
                 domain, asGraph("/invalidMembershipTriple2.ttl", domain + "foo"));
-        assertEquals(of(Trellis.InvalidRange), res);
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidRange, violation.getConstraint());
+            assertTrue(violation.getTriples().contains(rdf.createTriple(rdf.createIRI(domain + "foo"),
+                            LDP.isMemberOfRelation, LDP.contains)));
+        });
     }
 
     @Test
     public void testCardinality() {
         models.stream().forEach(type -> {
             final String subject = domain + "foo";
-            final Optional<IRI> res = svc.constrainedBy(type, domain, asGraph("/invalidCardinality.ttl", subject));
-            assertEquals(of(Trellis.InvalidCardinality), res);
+            final Optional<ConstraintViolation> res = svc.constrainedBy(type, domain, asGraph("/invalidCardinality.ttl",
+                        subject));
+            assertTrue(res.isPresent());
+            res.ifPresent(violation -> {
+                assertEquals(Trellis.InvalidCardinality, violation.getConstraint());
+            });
+        });
+    }
+
+    @Test
+    public void testTooManyMembershipTriples() {
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.IndirectContainer, domain,
+                asGraph("/tooManyMembershipTriples.ttl", domain + "foo"));
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidCardinality, violation.getConstraint());
         });
     }
 

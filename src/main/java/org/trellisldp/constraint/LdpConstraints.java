@@ -22,6 +22,7 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import org.apache.commons.rdf.api.RDFTerm;
 import org.apache.commons.rdf.api.Triple;
 import org.slf4j.Logger;
 import org.trellisldp.spi.ConstraintService;
+import org.trellisldp.spi.ConstraintViolation;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.OA;
@@ -157,42 +159,25 @@ public class LdpConstraints implements ConstraintService {
         };
     }
 
-    private static void logPredicate(final IRI constraint, final Triple triple) {
-        final String c = constraint.getIRIString();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(c + ": " + triple);
-        } else {
-            LOGGER.warn(c.split("#", 2)[1] + ": " + triple.getPredicate().ntriplesString());
-        }
-    }
-
-    private static void logObject(final IRI constraint, final Triple triple) {
-        final String c = constraint.getIRIString();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(c + ": " + triple);
-        } else {
-            LOGGER.warn(c.split("#", 2)[1] + ": " + triple.getObject().ntriplesString());
-        }
-    }
-
-    private Function<Triple, Stream<IRI>> checkModelConstraints(final IRI model, final String domain) {
+    private Function<Triple, Stream<ConstraintViolation>> checkModelConstraints(final IRI model, final String domain) {
         requireNonNull(model, "The interaction model must not be null!");
 
         return triple -> of(triple).filter(propertyFilter(model))
-                .map(t -> Stream.of(Trellis.InvalidProperty).peek(x -> logPredicate(x, t)))
+                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidProperty, t)))
             .orElseGet(() -> of(triple).filter(typeFilter)
-                .map(t -> Stream.of(Trellis.InvalidType).peek(x -> logObject(x, t)))
+                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidType, t)))
             .orElseGet(() -> of(triple).filter(uriRangeFilter)
-                .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
+                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidRange, t)))
             .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain))
-                .map(t -> Stream.of(Trellis.InvalidRange).peek(x -> logObject(x, t)))
-            .orElseGet(Stream::empty))));
+                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidRange, t)))
+            .orElseGet(Stream::empty)))).peek(x -> LOGGER.warn("Constraint violation: {}", x));
     }
 
     @Override
-    public Optional<IRI> constrainedBy(final IRI model, final String domain, final Graph graph) {
+    public Optional<ConstraintViolation> constrainedBy(final IRI model, final String domain, final Graph graph) {
         return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, domain)).findAny()
-            .orElseGet(() -> of(graph).filter(checkCardinality(model)).map(t -> Trellis.InvalidCardinality)
+            .orElseGet(() -> of(graph).filter(checkCardinality(model))
+                .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList())))
             .orElse(null)));
     }
 }
