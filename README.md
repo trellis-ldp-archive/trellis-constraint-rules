@@ -1,7 +1,9 @@
 # trellis-constraint-rules
 
 [![Build Status](https://travis-ci.org/trellis-ldp/trellis-constraint-rules.png?branch=master)](https://travis-ci.org/trellis-ldp/trellis-constraint-rules)
+[![Build status](https://ci.appveyor.com/api/projects/status/5pvc4udtlpmm80cy?svg=true)](https://ci.appveyor.com/project/acoburn/trellis-constraint-rules)
 [![Coverage Status](https://coveralls.io/repos/github/trellis-ldp/trellis-constraint-rules/badge.svg?branch=master)](https://coveralls.io/github/trellis-ldp/trellis-constraint-rules?branch=master)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.trellisldp/trellis-constraint-rules/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.trellisldp/trellis-constraint-rules/)
 
 A set of constraints on a trellis repository defining the rules that govern valid RDF.
 
