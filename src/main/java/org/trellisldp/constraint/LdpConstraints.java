@@ -162,6 +162,7 @@ public class LdpConstraints implements ConstraintService {
     private Function<Triple, Stream<ConstraintViolation>> checkModelConstraints(final IRI model, final String domain) {
         requireNonNull(model, "The interaction model must not be null!");
 
+        // TODO -- JDK9 refactor with Optional::or
         return triple -> of(triple).filter(propertyFilter(model))
                 .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidProperty, t)))
             .orElseGet(() -> of(triple).filter(typeFilter)
@@ -175,6 +176,7 @@ public class LdpConstraints implements ConstraintService {
 
     @Override
     public Optional<ConstraintViolation> constrainedBy(final IRI model, final String domain, final Graph graph) {
+        // TODO -- JDK9 refactor with Optional::or
         return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, domain)).findAny()
             .orElseGet(() -> of(graph).filter(checkCardinality(model))
                 .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList())))
