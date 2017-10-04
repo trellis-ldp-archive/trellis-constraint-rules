@@ -31,8 +31,8 @@ import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.rdf.model.Model;
 
 import org.junit.Test;
-import org.trellisldp.spi.ConstraintService;
-import org.trellisldp.spi.ConstraintViolation;
+import org.trellisldp.api.ConstraintService;
+import org.trellisldp.api.ConstraintViolation;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
