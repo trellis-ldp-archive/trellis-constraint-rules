@@ -92,7 +92,6 @@ public class LdpConstraints implements ConstraintService {
         data.add(LDP.inbox);
         data.add(LDP.insertedContentRelation);
         data.add(OA.annotationService);
-        data.add(RDF.type);
         propertiesWithUriRange = unmodifiableSet(data);
     }
 
@@ -103,6 +102,7 @@ public class LdpConstraints implements ConstraintService {
         final Set<IRI> data = new HashSet<>();
         data.add(ACL.accessControl);
         data.add(LDP.contains);
+        data.add(RDF.type);
         data.addAll(propertiesWithUriRange);
         restrictedMemberProperties = unmodifiableSet(data);
     }
@@ -125,7 +125,8 @@ public class LdpConstraints implements ConstraintService {
 
     // Verify that the range of the property is an IRI (if the property is in the above set)
     private static Predicate<Triple> uriRangeFilter = invalidMembershipProperty.or(triple ->
-        propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI));
+        propertiesWithUriRange.contains(triple.getPredicate()) && !(triple.getObject() instanceof IRI))
+        .or(triple -> RDF.type.equals(triple.getPredicate()) && !(triple.getObject() instanceof IRI));
 
     // Verify that the range of the property is in the repository domain
     private static Predicate<Triple> inDomainRangeFilter(final String domain) {
