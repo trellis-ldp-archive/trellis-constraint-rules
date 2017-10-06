@@ -253,6 +253,18 @@ public class LdpConstraintsTest {
     }
 
     @Test
+    public void testInvalidType2() {
+        final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.RDFSource, domain,
+                asGraph("/invalidType.ttl", domain + "foo"))
+            .filter(v -> v.getConstraint().equals(Trellis.InvalidRange)).findFirst();
+        assertTrue(res.isPresent());
+        res.ifPresent(violation -> {
+            assertEquals(Trellis.InvalidRange, violation.getConstraint());
+        });
+    }
+
+
+    @Test
     public void testTooManyMembershipTriples() {
         final Optional<ConstraintViolation> res = svc.constrainedBy(LDP.IndirectContainer, domain,
                 asGraph("/tooManyMembershipTriples.ttl", domain + "foo")).findFirst();
