@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"org.trellisldp.constraint","c":"LdpConstraints","l":"constrainedBy(IRI, String, Graph)","url":"constrainedBy-org.apache.commons.rdf.api.IRI-java.lang.String-org.apache.commons.rdf.api.Graph-"},{"p":"org.trellisldp.constraint","c":"LdpConstraints","l":"LdpConstraints()"}]

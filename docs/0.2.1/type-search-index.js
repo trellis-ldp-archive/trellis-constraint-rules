@@ -1,0 +1,1 @@
+typeSearchIndex = [{"p":"org.trellisldp.constraint","l":"LdpConstraints"}]
