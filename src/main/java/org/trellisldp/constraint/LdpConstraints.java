@@ -19,16 +19,15 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -162,24 +161,28 @@ public class LdpConstraints implements ConstraintService {
     private Function<Triple, Stream<ConstraintViolation>> checkModelConstraints(final IRI model, final String domain) {
         requireNonNull(model, "The interaction model must not be null!");
 
-        // TODO -- JDK9 refactor with Optional::or
-        return triple -> of(triple).filter(propertyFilter(model))
-                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidProperty, t)))
-            .orElseGet(() -> of(triple).filter(typeFilter)
-                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidType, t)))
-            .orElseGet(() -> of(triple).filter(uriRangeFilter)
-                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidRange, t)))
-            .orElseGet(() -> of(triple).filter(inDomainRangeFilter(domain))
-                .map(t -> Stream.of(new ConstraintViolation(Trellis.InvalidRange, t)))
-            .orElseGet(Stream::empty)))).peek(x -> LOGGER.warn("Constraint violation: {}", x));
+        return triple -> {
+            final Stream.Builder<ConstraintViolation> builder = Stream.builder();
+            of(triple).filter(propertyFilter(model)).map(t -> new ConstraintViolation(Trellis.InvalidProperty, t))
+                .ifPresent(builder::accept);
+
+            of(triple).filter(typeFilter).map(t -> new ConstraintViolation(Trellis.InvalidType, t))
+                .ifPresent(builder::accept);
+
+            of(triple).filter(uriRangeFilter).map(t -> new ConstraintViolation(Trellis.InvalidRange, t))
+                .ifPresent(builder::accept);
+
+            of(triple).filter(inDomainRangeFilter(domain)).map(t -> new ConstraintViolation(Trellis.InvalidRange, t))
+                .ifPresent(builder::accept);
+
+            return builder.build();
+        };
     }
 
     @Override
-    public Optional<ConstraintViolation> constrainedBy(final IRI model, final String domain, final Graph graph) {
-        // TODO -- JDK9 refactor with Optional::or
-        return ofNullable(graph.stream().parallel().flatMap(checkModelConstraints(model, domain)).findAny()
-            .orElseGet(() -> of(graph).filter(checkCardinality(model))
-                .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList())))
-            .orElse(null)));
+    public Stream<ConstraintViolation> constrainedBy(final IRI model, final String domain, final Graph graph) {
+        return concat(graph.stream().flatMap(checkModelConstraints(model, domain)),
+                Stream.of(graph).filter(checkCardinality(model))
+                    .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList()))));
     }
 }
