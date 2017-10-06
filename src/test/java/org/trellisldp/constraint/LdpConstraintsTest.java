@@ -127,7 +127,7 @@ public class LdpConstraintsTest {
         models.stream().forEach(ldpType -> {
             final String subject = domain + "foo";
             final Optional<ConstraintViolation> res = svc.constrainedBy(ldpType, domain, asGraph("/withLdpType.ttl",
-                        subject)).findFirst();
+                        subject)).filter(v -> Trellis.InvalidType.equals(v.getConstraint())).findFirst();
             assertTrue(res.isPresent());
             res.ifPresent(violation -> {
                 assertEquals(Trellis.InvalidType, violation.getConstraint());
