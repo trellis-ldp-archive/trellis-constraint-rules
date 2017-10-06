@@ -92,6 +92,7 @@ public class LdpConstraints implements ConstraintService {
         data.add(LDP.inbox);
         data.add(LDP.insertedContentRelation);
         data.add(OA.annotationService);
+        data.add(RDF.type);
         propertiesWithUriRange = unmodifiableSet(data);
     }
 
@@ -102,7 +103,6 @@ public class LdpConstraints implements ConstraintService {
         final Set<IRI> data = new HashSet<>();
         data.add(ACL.accessControl);
         data.add(LDP.contains);
-        data.add(RDF.type);
         data.addAll(propertiesWithUriRange);
         restrictedMemberProperties = unmodifiableSet(data);
     }
