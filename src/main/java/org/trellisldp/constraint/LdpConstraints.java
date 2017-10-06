@@ -183,6 +183,7 @@ public class LdpConstraints implements ConstraintService {
     public Stream<ConstraintViolation> constrainedBy(final IRI model, final String domain, final Graph graph) {
         return concat(graph.stream().flatMap(checkModelConstraints(model, domain)),
                 Stream.of(graph).filter(checkCardinality(model))
-                    .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList()))));
+                    .map(g -> new ConstraintViolation(Trellis.InvalidCardinality, g.stream().collect(toList()))))
+            .peek(x -> LOGGER.debug("Constraint violation: {}", x));
     }
 }
