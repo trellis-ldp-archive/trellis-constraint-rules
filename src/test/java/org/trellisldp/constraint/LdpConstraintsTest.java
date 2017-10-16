@@ -18,9 +18,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.jena.rdf.model.ModelFactory.createDefaultModel;
 import static org.apache.jena.riot.RDFDataMgr.read;
 import static org.apache.jena.riot.Lang.TURTLE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.trellisldp.vocabulary.RDF.type;
 
 import java.util.List;
@@ -31,15 +31,13 @@ import org.apache.commons.rdf.api.IRI;
 import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.rdf.model.Model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.trellisldp.api.ConstraintService;
 import org.trellisldp.api.ConstraintViolation;
 import org.trellisldp.vocabulary.ACL;
 import org.trellisldp.vocabulary.DC;
 import org.trellisldp.vocabulary.LDP;
 import org.trellisldp.vocabulary.Trellis;
-
-
 
 /**
  * @author acoburn

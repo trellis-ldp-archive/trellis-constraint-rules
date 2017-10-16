@@ -36,10 +36,12 @@ ext {
     slf4jVersion = '1.7.25'
 
     /* Testing */
-    junitVersion = '4.12.1'
+    junitVersion = '5.0.1'
+    junitPlatformVersion = '1.0.1'
     mockitoVersion = '2.11.0'
     logbackVersion = '1.2.3'
     jacocoVersion = "0.7.9"
+    apiguardianVersion = "1.0.0"
 
     /* OSGi */
     trellisApiVersionRange = '[0.3,1)'
@@ -60,8 +62,10 @@ dependencies {
     implementation group: 'org.trellisldp', name: 'trellis-vocabulary', version: trellisVocabularyVersion
 
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
-    testImplementation group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitVersion
     testImplementation group: 'org.apache.commons', name: 'commons-rdf-jena', version: commonsRdfVersion
+    testImplementation group: 'org.apiguardian', name: 'apiguardian-api', version: apiguardianVersion
+    testImplementation group: 'org.junit.platform', name: 'junit-platform-runner', version: junitPlatformVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitVersion
     testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
 
     buildToolsConfig 'org.trellisldp:trellis-build-tools:0.2.0'
