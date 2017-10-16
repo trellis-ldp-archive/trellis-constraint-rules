@@ -32,6 +32,8 @@ import org.apache.commons.rdf.jena.JenaRDF;
 import org.apache.jena.rdf.model.Model;
 
 import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 import org.trellisldp.api.ConstraintService;
 import org.trellisldp.api.ConstraintViolation;
 import org.trellisldp.vocabulary.ACL;
@@ -42,6 +44,7 @@ import org.trellisldp.vocabulary.Trellis;
 /**
  * @author acoburn
  */
+@RunWith(JUnitPlatform.class)
 public class LdpConstraintsTest {
 
     private static final JenaRDF rdf = new JenaRDF();
