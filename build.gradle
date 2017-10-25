@@ -92,6 +92,10 @@ jacocoTestReport {
 
 release {
     tagTemplate = '$name-$version'
+
+    git {
+        signTag = true
+    }
 }
 
 jar {
