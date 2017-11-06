@@ -23,11 +23,11 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -76,31 +76,15 @@ public class LdpConstraints implements ConstraintService {
                 new SimpleEntry<>(LDP.RDFSource, basicConstraints))
             .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
-    private static final Set<IRI> propertiesWithUriRange;
+    // Properties that need to be used with objects that are IRIs
+    private static final Set<IRI> propertiesWithUriRange = unmodifiableSet(Stream.of(
+                LDP.membershipResource, LDP.hasMemberRelation, LDP.inbox, LDP.insertedContentRelation,
+                OA.annotationService).collect(toSet()));
 
-    static {
-        // TODO - JDK9 initializer
-        final Set<IRI> data = new HashSet<>();
-        data.add(LDP.membershipResource);
-        data.add(LDP.hasMemberRelation);
-        data.add(LDP.isMemberOfRelation);
-        data.add(LDP.inbox);
-        data.add(LDP.insertedContentRelation);
-        data.add(OA.annotationService);
-        propertiesWithUriRange = unmodifiableSet(data);
-    }
-
-    private static final Set<IRI> restrictedMemberProperties;
-
-    static {
-        // TODO - JDK9 initializer
-        final Set<IRI> data = new HashSet<>();
-        data.add(ACL.accessControl);
-        data.add(LDP.contains);
-        data.add(RDF.type);
-        data.addAll(propertiesWithUriRange);
-        restrictedMemberProperties = unmodifiableSet(data);
-    }
+    // Properties that cannot be used as dynamic Membership properties
+    private static final Set<IRI> restrictedMemberProperties = unmodifiableSet(Stream.of(
+                ACL.accessControl, LDP.contains, RDF.type, LDP.membershipResource, LDP.hasMemberRelation,
+                LDP.inbox, LDP.insertedContentRelation, OA.annotationService).collect(toSet()));
 
     // Ensure that any LDP properties are appropriate for the interaction model
     private static Predicate<Triple> propertyFilter(final IRI model) {
