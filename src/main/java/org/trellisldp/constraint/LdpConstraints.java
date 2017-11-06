@@ -22,10 +22,11 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.util.HashMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -66,20 +67,14 @@ public class LdpConstraints implements ConstraintService {
 
     private static final Set<IRI> propertiesWithInDomainRange = singleton(LDP.membershipResource);
 
-    private static final Map<IRI, Predicate<Triple>> typeMap;
-
-    static {
-        // TODO - JDK9 initializer
-        final Map<IRI, Predicate<Triple>> data = new HashMap<>();
-        data.put(LDP.BasicContainer, basicConstraints);
-        data.put(LDP.Container, basicConstraints);
-        data.put(LDP.DirectContainer, memberContainerConstraints);
-        data.put(LDP.IndirectContainer, memberContainerConstraints);
-        data.put(LDP.NonRDFSource, basicConstraints);
-        data.put(LDP.RDFSource, basicConstraints);
-
-        typeMap = unmodifiableMap(data);
-    }
+    private static final Map<IRI, Predicate<Triple>> typeMap = unmodifiableMap(Stream.of(
+                new SimpleEntry<>(LDP.BasicContainer, basicConstraints),
+                new SimpleEntry<>(LDP.Container, basicConstraints),
+                new SimpleEntry<>(LDP.DirectContainer, memberContainerConstraints),
+                new SimpleEntry<>(LDP.IndirectContainer, memberContainerConstraints),
+                new SimpleEntry<>(LDP.NonRDFSource, basicConstraints),
+                new SimpleEntry<>(LDP.RDFSource, basicConstraints))
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
     private static final Set<IRI> propertiesWithUriRange;
 
