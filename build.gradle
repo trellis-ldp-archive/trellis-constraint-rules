@@ -31,7 +31,7 @@ ext {
 
     /* Dependencies */
     trellisApiVersion = '0.4.0'
-    trellisVocabularyVersion = '0.1.0'
+    trellisVocabularyVersion = '0.2.0'
     commonsRdfVersion = '0.3.0-incubating'
     slf4jVersion = '1.7.25'
 
